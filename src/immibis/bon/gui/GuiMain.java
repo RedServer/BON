@@ -452,7 +452,10 @@ public class GuiMain extends JFrame {
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					new GuiMain().setVisible(true);
+					GuiMain gui = new GuiMain();
+					gui.setLocationRelativeTo(null);
+					gui.setVisible(true);
+					gui.setResizable(false);
 				}
 			});
 		}
