@@ -28,54 +28,65 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.objectweb.asm.tree;
+package org.objectweb.asm.tree.analysis;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.JumpInsnNode;
+import org.objectweb.asm.tree.LabelNode;
 
 /**
- * A node that represents an LDC instruction.
+ * A method subroutine (corresponds to a JSR instruction).
  *
  * @author Eric Bruneton
  */
-public class LdcInsnNode extends AbstractInsnNode {
+class Subroutine {
 
-	/**
-	 * The constant to be loaded on the stack. This parameter must be a non null
-	 * {@link Integer}, a {@link Float}, a {@link Long}, a {@link Double}, a
-	 * {@link String} or a {@link org.objectweb.asm.Type}.
-	 */
-	public Object cst;
+	LabelNode start;
 
-	/**
-	 * Constructs a new {@link LdcInsnNode}.
-	 *
-	 * @param cst
-	 * the constant to be loaded on the stack. This parameter must be
-	 * a non null {@link Integer}, a {@link Float}, a {@link Long}, a
-	 * {@link Double} or a {@link String}.
-	 */
-	public LdcInsnNode(final Object cst) {
-		super(Opcodes.LDC);
-		this.cst = cst;
+	boolean[] access;
+
+	List<JumpInsnNode> callers;
+
+	private Subroutine() {
 	}
 
-	@Override
-	public int getType() {
-		return LDC_INSN;
+	Subroutine(final LabelNode start, final int maxLocals,
+			final JumpInsnNode caller) {
+		this.start = start;
+		this.access = new boolean[maxLocals];
+		this.callers = new ArrayList<JumpInsnNode>();
+		callers.add(caller);
 	}
 
-	@Override
-	public void accept(final MethodVisitor mv) {
-		mv.visitLdcInsn(cst);
-		acceptAnnotations(mv);
+	public Subroutine copy() {
+		Subroutine result = new Subroutine();
+		result.start = start;
+		result.access = new boolean[access.length];
+		System.arraycopy(access, 0, result.access, 0, access.length);
+		result.callers = new ArrayList<JumpInsnNode>(callers);
+		return result;
 	}
 
-	@Override
-	public AbstractInsnNode clone(final Map<LabelNode, LabelNode> labels) {
-		return new LdcInsnNode(cst).cloneAnnotations(this);
+	public boolean merge(final Subroutine subroutine) throws AnalyzerException {
+		boolean changes = false;
+		for(int i = 0; i < access.length; ++i) {
+			if(subroutine.access[i] && !access[i]) {
+				access[i] = true;
+				changes = true;
+			}
+		}
+		if(subroutine.start == start) {
+			for(int i = 0; i < subroutine.callers.size(); ++i) {
+				JumpInsnNode caller = subroutine.callers.get(i);
+				if(!callers.contains(caller)) {
+					callers.add(caller);
+					changes = true;
+				}
+			}
+		}
+		return changes;
 	}
 
 }

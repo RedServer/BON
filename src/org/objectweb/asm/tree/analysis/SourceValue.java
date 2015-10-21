@@ -28,54 +28,72 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.objectweb.asm.tree;
+package org.objectweb.asm.tree.analysis;
 
-import java.util.Map;
+import java.util.Set;
 
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
 
 /**
- * A node that represents an LDC instruction.
+ * A {@link Value} that is represented by its type in a two types type system.
+ * This type system distinguishes the ONEWORD and TWOWORDS types.
  *
  * @author Eric Bruneton
  */
-public class LdcInsnNode extends AbstractInsnNode {
+public class SourceValue implements Value {
 
 	/**
-	 * The constant to be loaded on the stack. This parameter must be a non null
-	 * {@link Integer}, a {@link Float}, a {@link Long}, a {@link Double}, a
-	 * {@link String} or a {@link org.objectweb.asm.Type}.
+	 * The size of this value.
 	 */
-	public Object cst;
+	public final int size;
 
 	/**
-	 * Constructs a new {@link LdcInsnNode}.
+	 * The instructions that can produce this value. For example, for the Java
+	 * code below, the instructions that can produce the value of <tt>i</tt> at
+	 * line 5 are the txo ISTORE instructions at line 1 and 3:
 	 *
-	 * @param cst
-	 * the constant to be loaded on the stack. This parameter must be
-	 * a non null {@link Integer}, a {@link Float}, a {@link Long}, a
-	 * {@link Double} or a {@link String}.
+	 * <pre>
+	 * 1: i = 0;
+	 * 2: if (...) {
+	 * 3:   i = 1;
+	 * 4: }
+	 * 5: return i;
+	 * </pre>
+	 *
+	 * This field is a set of {@link AbstractInsnNode} objects.
 	 */
-	public LdcInsnNode(final Object cst) {
-		super(Opcodes.LDC);
-		this.cst = cst;
+	public final Set<AbstractInsnNode> insns;
+
+	public SourceValue(final int size) {
+		this(size, SmallSet.<AbstractInsnNode>emptySet());
+	}
+
+	public SourceValue(final int size, final AbstractInsnNode insn) {
+		this.size = size;
+		this.insns = new SmallSet<AbstractInsnNode>(insn, null);
+	}
+
+	public SourceValue(final int size, final Set<AbstractInsnNode> insns) {
+		this.size = size;
+		this.insns = insns;
+	}
+
+	public int getSize() {
+		return size;
 	}
 
 	@Override
-	public int getType() {
-		return LDC_INSN;
+	public boolean equals(final Object value) {
+		if(!(value instanceof SourceValue)) {
+			return false;
+		}
+		SourceValue v = (SourceValue)value;
+		return size == v.size && insns.equals(v.insns);
 	}
 
 	@Override
-	public void accept(final MethodVisitor mv) {
-		mv.visitLdcInsn(cst);
-		acceptAnnotations(mv);
-	}
-
-	@Override
-	public AbstractInsnNode clone(final Map<LabelNode, LabelNode> labels) {
-		return new LdcInsnNode(cst).cloneAnnotations(this);
+	public int hashCode() {
+		return insns.hashCode();
 	}
 
 }

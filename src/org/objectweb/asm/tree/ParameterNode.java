@@ -30,52 +30,50 @@
  */
 package org.objectweb.asm.tree;
 
-import java.util.Map;
-
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 
 /**
- * A node that represents an LDC instruction.
+ * A node that represents a parameter access and name.
  *
- * @author Eric Bruneton
+ * @author Remi Forax
  */
-public class LdcInsnNode extends AbstractInsnNode {
+public class ParameterNode {
 
 	/**
-	 * The constant to be loaded on the stack. This parameter must be a non null
-	 * {@link Integer}, a {@link Float}, a {@link Long}, a {@link Double}, a
-	 * {@link String} or a {@link org.objectweb.asm.Type}.
+	 * The parameter's name.
 	 */
-	public Object cst;
+	public String name;
 
 	/**
-	 * Constructs a new {@link LdcInsnNode}.
+	 * The parameter's access flags (see {@link org.objectweb.asm.Opcodes}).
+	 * Valid values are <tt>ACC_FINAL</tt>, <tt>ACC_SYNTHETIC</tt> and
+	 * <tt>ACC_MANDATED</tt>.
+	 */
+	public int access;
+
+	/**
+	 * Constructs a new {@link ParameterNode}.
 	 *
-	 * @param cst
-	 * the constant to be loaded on the stack. This parameter must be
-	 * a non null {@link Integer}, a {@link Float}, a {@link Long}, a
-	 * {@link Double} or a {@link String}.
+	 * @param access
+	 * The parameter's access flags. Valid values are
+	 * <tt>ACC_FINAL</tt>, <tt>ACC_SYNTHETIC</tt> or/and
+	 * <tt>ACC_MANDATED</tt> (see {@link org.objectweb.asm.Opcodes}).
+	 * @param name
+	 * the parameter's name.
 	 */
-	public LdcInsnNode(final Object cst) {
-		super(Opcodes.LDC);
-		this.cst = cst;
+	public ParameterNode(final String name, final int access) {
+		this.name = name;
+		this.access = access;
 	}
 
-	@Override
-	public int getType() {
-		return LDC_INSN;
-	}
-
-	@Override
+	/**
+	 * Makes the given visitor visit this parameter declaration.
+	 *
+	 * @param mv
+	 * a method visitor.
+	 */
 	public void accept(final MethodVisitor mv) {
-		mv.visitLdcInsn(cst);
-		acceptAnnotations(mv);
-	}
-
-	@Override
-	public AbstractInsnNode clone(final Map<LabelNode, LabelNode> labels) {
-		return new LdcInsnNode(cst).cloneAnnotations(this);
+		mv.visitParameter(name, access);
 	}
 
 }

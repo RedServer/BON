@@ -28,54 +28,20 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.objectweb.asm.tree;
-
-import java.util.Map;
-
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+package org.objectweb.asm.tree.analysis;
 
 /**
- * A node that represents an LDC instruction.
+ * An immutable symbolic value for semantic interpretation of bytecode.
  *
  * @author Eric Bruneton
  */
-public class LdcInsnNode extends AbstractInsnNode {
+public interface Value {
 
 	/**
-	 * The constant to be loaded on the stack. This parameter must be a non null
-	 * {@link Integer}, a {@link Float}, a {@link Long}, a {@link Double}, a
-	 * {@link String} or a {@link org.objectweb.asm.Type}.
-	 */
-	public Object cst;
-
-	/**
-	 * Constructs a new {@link LdcInsnNode}.
+	 * Returns the size of this value in words.
 	 *
-	 * @param cst
-	 * the constant to be loaded on the stack. This parameter must be
-	 * a non null {@link Integer}, a {@link Float}, a {@link Long}, a
-	 * {@link Double} or a {@link String}.
+	 * @return either 1 or 2.
 	 */
-	public LdcInsnNode(final Object cst) {
-		super(Opcodes.LDC);
-		this.cst = cst;
-	}
-
-	@Override
-	public int getType() {
-		return LDC_INSN;
-	}
-
-	@Override
-	public void accept(final MethodVisitor mv) {
-		mv.visitLdcInsn(cst);
-		acceptAnnotations(mv);
-	}
-
-	@Override
-	public AbstractInsnNode clone(final Map<LabelNode, LabelNode> labels) {
-		return new LdcInsnNode(cst).cloneAnnotations(this);
-	}
+	int getSize();
 
 }

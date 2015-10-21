@@ -28,54 +28,37 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.objectweb.asm.tree;
+package org.objectweb.asm.tree.analysis;
 
-import java.util.Map;
-
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
 
 /**
- * A node that represents an LDC instruction.
+ * Thrown if a problem occurs during the analysis of a method.
  *
+ * @author Bing Ran
  * @author Eric Bruneton
  */
-public class LdcInsnNode extends AbstractInsnNode {
+@SuppressWarnings("serial")
+public class AnalyzerException extends Exception {
 
-	/**
-	 * The constant to be loaded on the stack. This parameter must be a non null
-	 * {@link Integer}, a {@link Float}, a {@link Long}, a {@link Double}, a
-	 * {@link String} or a {@link org.objectweb.asm.Type}.
-	 */
-	public Object cst;
+	public final AbstractInsnNode node;
 
-	/**
-	 * Constructs a new {@link LdcInsnNode}.
-	 *
-	 * @param cst
-	 * the constant to be loaded on the stack. This parameter must be
-	 * a non null {@link Integer}, a {@link Float}, a {@link Long}, a
-	 * {@link Double} or a {@link String}.
-	 */
-	public LdcInsnNode(final Object cst) {
-		super(Opcodes.LDC);
-		this.cst = cst;
+	public AnalyzerException(final AbstractInsnNode node, final String msg) {
+		super(msg);
+		this.node = node;
 	}
 
-	@Override
-	public int getType() {
-		return LDC_INSN;
+	public AnalyzerException(final AbstractInsnNode node, final String msg,
+			final Throwable exception) {
+		super(msg, exception);
+		this.node = node;
 	}
 
-	@Override
-	public void accept(final MethodVisitor mv) {
-		mv.visitLdcInsn(cst);
-		acceptAnnotations(mv);
-	}
-
-	@Override
-	public AbstractInsnNode clone(final Map<LabelNode, LabelNode> labels) {
-		return new LdcInsnNode(cst).cloneAnnotations(this);
+	public AnalyzerException(final AbstractInsnNode node, final String msg,
+			final Object expected, final Value encountered) {
+		super((msg == null ? "Expected " : msg + ": expected ") + expected
+				+ ", but found " + encountered);
+		this.node = node;
 	}
 
 }
