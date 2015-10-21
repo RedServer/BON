@@ -40,6 +40,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 public class GuiMain extends JFrame {
 
@@ -449,6 +450,11 @@ public class GuiMain extends JFrame {
 				e.printStackTrace();
 			}
 		} else {
+			try {
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			} catch (Exception ex) {
+			}
+
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
