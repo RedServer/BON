@@ -263,14 +263,29 @@ public class MappingLoader_MCP {
 
 	public static String getMCVer(File mcpDir) throws IOException {
 		try {
-			Scanner in = new Scanner(new File(mcpDir, "src/main/resources/mcpmod.info"));
-			while(in.hasNextLine()) {
-				String line = in.nextLine().trim();
-				if(line.startsWith("\"mcversion\":")) {
-					return line.split(":")[1].replace('"', ' ').replace(',', ' ').trim();
+			File versionFile = new File(mcpDir, "src/main/resources/mcpmod.info");
+			if(versionFile.exists() && versionFile.isFile()) {
+				Scanner in = new Scanner(versionFile);
+				while(in.hasNextLine()) {
+					String line = in.nextLine().trim();
+					if(line.startsWith("\"mcversion\":")) {
+						return line.split(":")[1].replace('"', ' ').replace(',', ' ').trim();
+					}
 				}
 			}
-		} catch (Throwable _) {
+
+			// LEGACY
+			versionFile = new File(mcpDir, "conf/version.cfg");
+			if(versionFile.exists() && versionFile.isFile()) {
+				Scanner in = new Scanner(versionFile);
+				while(in.hasNextLine()) {
+					String line = in.nextLine().trim();
+					if((line.startsWith("ClientVersion") || line.startsWith("ServerVersion")) && line.contains("=")) {
+						return line.split("=", 2)[1].trim();
+					}
+				}
+			}
+		} catch (Throwable ex) {
 		}
 		return "unknown";
 	}
