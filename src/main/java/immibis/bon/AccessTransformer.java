@@ -26,7 +26,7 @@ public class AccessTransformer {
 			return cc;
 		}
 
-		HashMap<String, ClassNode> refClasses = new HashMap<String, ClassNode>();
+		HashMap<String, ClassNode> refClasses = new HashMap<>();
 
 		for(ClassCollection refcc : refs) {
 			for(ClassNode cn : refcc.getAllClasses()) {
