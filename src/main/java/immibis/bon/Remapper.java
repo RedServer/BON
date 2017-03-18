@@ -24,6 +24,7 @@ import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.MultiANewArrayInsnNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 
@@ -258,7 +259,13 @@ public class Remapper {
 							TypeInsnNode tin = (TypeInsnNode)ain;
 
 							tin.desc = m.getClass(tin.desc);
+
+							// TODO TheAndrey start
+						} else if(ain instanceof MultiANewArrayInsnNode) { // Многомерный массив
+							MultiANewArrayInsnNode arrayinsn = (MultiANewArrayInsnNode)ain;
+							arrayinsn.desc = m.getClass(arrayinsn.desc);
 						}
+						// TODO TheAndrey end
 					}
 				}
 
