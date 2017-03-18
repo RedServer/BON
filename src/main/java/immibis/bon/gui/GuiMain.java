@@ -54,12 +54,13 @@ public class GuiMain extends JFrame {
 	private final static String PREFS_KEY_BROWSEDIR = "browseDir";
 	private final static String PREFS_KEY_MCPDIR = "mcpDir";
 
-	private JComboBox opSelect;
-	private JComboBox sideSelect;
-	private JTextField inputField, outputField, mcpField;
-	private JButton goButton;
-	private JProgressBar progressBar;
-	private JLabel progressLabel;
+	private final JComboBox opSelect;
+	private final JComboBox sideSelect;
+	private final JTextField inputField;
+	private JTextField outputField, mcpField;
+	private final JButton goButton;
+	private final JProgressBar progressBar;
+	private final JLabel progressLabel;
 
 	private Thread curTask = null;
 

@@ -35,10 +35,10 @@ public class MappingLoader_MCP {
 	private final File mcpDir;
 	private final int[] sideNumbers;
 	private final File srgFile, excFile;
-
 	// forward: obf -> searge -> mcp
 	// reverse: mcp -> searge -> obf
-	private Mapping forwardSRG, reverseSRG, forwardCSV, reverseCSV;
+	private final Mapping forwardSRG;
+	private Mapping reverseSRG, forwardCSV, reverseCSV;
 
 	private Map<String, Set<String>> srgMethodDescriptors = new HashMap<String, Set<String>>(); // SRG name -> SRG descriptors
 	private Map<String, Set<String>> srgMethodOwners = new HashMap<String, Set<String>>(); // SRG name -> SRG owners

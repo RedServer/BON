@@ -17,7 +17,7 @@ public class ClassCollection implements Cloneable {
 	}
 
 	private NameSet nameSet;
-	private Manifest manifest;
+	private final Manifest manifest;
 	private Collection<ClassNode> classes = new ArrayList<ClassNode>();
 	private Map<String, byte[]> extraFiles = new HashMap<String, byte[]>();
 

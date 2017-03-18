@@ -4,11 +4,11 @@ import java.util.*;
 
 public class Mapping {
 
-	private Map<String, String> classes = new HashMap<String, String>();
-	private Map<String, String> methods = new HashMap<String, String>();
-	private Map<String, String> fields = new HashMap<String, String>();
-	private Map<String, List<String>> exceptions = new HashMap<String, List<String>>();
-	private Map<String, String> classPrefixes = new HashMap<String, String>();
+	private final Map<String, String> classes = new HashMap<>();
+	private final Map<String, String> methods = new HashMap<>();
+	private final Map<String, String> fields = new HashMap<>();
+	private final Map<String, List<String>> exceptions = new HashMap<>();
+	private final Map<String, String> classPrefixes = new HashMap<>();
 	private String defaultPackage = "";
 
 	public final NameSet fromNS, toNS;

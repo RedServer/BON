@@ -7,7 +7,7 @@ public class ExcFile {
 
 	public Map<String, String[]> exceptions = new HashMap<String, String[]>();
 
-	private static String[] EMPTY_STRING_ARRAY = new String[0];
+	private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
 	// returns internal names, can return null
 	// input uses SRG names
