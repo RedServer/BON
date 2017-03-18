@@ -84,7 +84,7 @@ public class JarWriter {
 			}
 			j_out.flush();
 			j_out.close();
-		} catch (Throwable _) {
+		} catch (Throwable ex) {
 		}
 	}
 

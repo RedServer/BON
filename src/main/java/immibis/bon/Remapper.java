@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,13 +43,13 @@ public class Remapper {
 		}
 		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-5.html#jvms-5.4.3.2
 
-		for(FieldNode fn : cn.fields) {
+		for(FieldNode fn : (List<FieldNode>)cn.fields) {
 			if(fn.name.equals(name) && fn.desc.equals(desc)) {
 				return owner;
 			}
 		}
 
-		for(String i : cn.interfaces) {
+		for(String i : (List<String>)cn.interfaces) {
 			String result = resolveField(refClasses, i, name, desc, m);
 			if(result != null) {
 				return result;
@@ -77,14 +78,14 @@ public class Remapper {
 		if((cn.access & Opcodes.ACC_INTERFACE) != 0) {
 
 			// interface method resolution; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-5.html#jvms-5.4.3.4
-			for(MethodNode mn : cn.methods) {
+			for(MethodNode mn : (List<MethodNode>)cn.methods) {
 				if(mn.name.equals(name) && mn.desc.equals(desc)) {
 					r = new String[]{owner, desc, name};
 					break;
 				}
 			}
 
-			for(String i : cn.interfaces) {
+			for(String i : (List<String>)cn.interfaces) {
 				String[] result = resolveMethod(refClasses, i, name, desc, m);
 				if(r == null ? result != null : (result != null && !result[2].equals(r[2]))) {
 					return result;
@@ -96,7 +97,7 @@ public class Remapper {
 		} else {
 
 			// normal method resolution; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-5.html#jvms-5.4.3.3
-			for(MethodNode mn : cn.methods) {
+			for(MethodNode mn : (List<MethodNode>)cn.methods) {
 				if(mn.name.equals(name) && mn.desc.equals(desc)) {
 					r = new String[]{owner, desc, name};
 					break;
@@ -116,7 +117,7 @@ public class Remapper {
 					return new String[]{owner, desc, newName}; // short-circuit: this is a remapped method
 				}
 				if(r == null) {
-					for(MethodNode mn : cn.methods) {
+					for(MethodNode mn : (List<MethodNode>)cn.methods) {
 						if(mn.name.equals(name) && mn.desc.equals(desc)) {
 							r = new String[]{owner, desc, name};
 							break;
@@ -135,7 +136,7 @@ public class Remapper {
 					break;
 				}
 
-				for(String i : cn.interfaces) {
+				for(String i : (List<String>)cn.interfaces) {
 					String[] result = resolveMethod(refClasses, i, name, desc, m);
 					if(r == null ? result != null : (result != null && !result[2].equals(r[2]))) {
 						return result;
@@ -186,7 +187,7 @@ public class Remapper {
 				progress.set(classesProcessed++);
 			}
 
-			for(MethodNode mn : cn.methods) {
+			for(MethodNode mn : (List<MethodNode>)cn.methods) {
 
 				String[] resolvedMN = resolveMethod(refClasses, cn.name, mn.name, mn.desc, m);
 
@@ -261,7 +262,7 @@ public class Remapper {
 					}
 				}
 
-				for(TryCatchBlockNode tcb : mn.tryCatchBlocks) {
+				for(TryCatchBlockNode tcb : (List<TryCatchBlockNode>)mn.tryCatchBlocks) {
 					if(tcb.type != null) {
 						tcb.type = m.getClass(tcb.type);
 					}
@@ -277,7 +278,7 @@ public class Remapper {
 				}
 
 				if(mn.localVariables != null) {
-					for(LocalVariableNode lvn : mn.localVariables) {
+					for(LocalVariableNode lvn : (List<LocalVariableNode>)mn.localVariables) {
 						lvn.desc = m.mapTypeDescriptor(lvn.desc);
 					}
 				}
@@ -285,29 +286,29 @@ public class Remapper {
 				mn.signature = m.parseTypes(mn.signature, true, true);
 
 				if(mn.visibleAnnotations != null) {
-					for(AnnotationNode n : mn.visibleAnnotations) {
+					for(AnnotationNode n : (List<AnnotationNode>)mn.visibleAnnotations) {
 						n.desc = m.parseTypes(n.desc, true, false);
 					}
 				}
 				if(mn.invisibleAnnotations != null) {
-					for(AnnotationNode n : mn.invisibleAnnotations) {
+					for(AnnotationNode n : (List<AnnotationNode>)mn.invisibleAnnotations) {
 						n.desc = m.parseTypes(n.desc, true, false);
 					}
 				}
 			}
 
-			for(FieldNode fn : cn.fields) {
+			for(FieldNode fn : (List<FieldNode>)cn.fields) {
 				fn.name = m.getField(cn.name, fn.name, fn.desc);
 				fn.desc = m.mapTypeDescriptor(fn.desc);
 				fn.signature = m.parseTypes(fn.signature, true, false);
 
 				if(fn.visibleAnnotations != null) {
-					for(AnnotationNode n : fn.visibleAnnotations) {
+					for(AnnotationNode n : (List<AnnotationNode>)fn.visibleAnnotations) {
 						n.desc = m.parseTypes(n.desc, true, false);
 					}
 				}
 				if(fn.invisibleAnnotations != null) {
-					for(AnnotationNode n : fn.invisibleAnnotations) {
+					for(AnnotationNode n : (List<AnnotationNode>)fn.invisibleAnnotations) {
 						n.desc = m.parseTypes(n.desc, true, false);
 					}
 				}
@@ -319,21 +320,21 @@ public class Remapper {
 			cn.signature = m.parseTypes(cn.signature, true, false);
 
 			for(int k = 0, e = cn.interfaces.size(); k < e; k++) {
-				cn.interfaces.set(k, m.getClass(cn.interfaces.get(k)));
+				cn.interfaces.set(k, m.getClass((String)cn.interfaces.get(k)));
 			}
 
 			if(cn.visibleAnnotations != null) {
-				for(AnnotationNode n : cn.visibleAnnotations) {
+				for(AnnotationNode n : (List<AnnotationNode>)cn.visibleAnnotations) {
 					n.desc = m.parseTypes(n.desc, true, false);
 				}
 			}
 			if(cn.invisibleAnnotations != null) {
-				for(AnnotationNode n : cn.invisibleAnnotations) {
+				for(AnnotationNode n : (List<AnnotationNode>)cn.invisibleAnnotations) {
 					n.desc = m.parseTypes(n.desc, true, false);
 				}
 			}
 
-			for(InnerClassNode icn : cn.innerClasses) {
+			for(InnerClassNode icn : (List<InnerClassNode>)cn.innerClasses) {
 				icn.name = m.getClass(icn.name);
 				if(icn.outerName != null) {
 					icn.outerName = m.getClass(icn.outerName);

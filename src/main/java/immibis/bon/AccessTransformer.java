@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -57,7 +58,7 @@ public class AccessTransformer {
 			}
 
 			if(cn.innerClasses != null) {
-				for(InnerClassNode in : cn.innerClasses) {
+				for(InnerClassNode in : (List<InnerClassNode>)cn.innerClasses) {
 					m = classAccess.get(in.name);
 					if(m != null) {
 						in.access = m.getFixedAccess(in.access);
@@ -65,7 +66,7 @@ public class AccessTransformer {
 				}
 			}
 
-			for(FieldNode fn : cn.fields) {
+			for(FieldNode fn : (List<FieldNode>)cn.fields) {
 				m = fieldAccess.get(cn.name + '/' + fn.name);
 				if(m != null) {
 					fn.access = m.getFixedAccess(fn.access);
@@ -76,7 +77,7 @@ public class AccessTransformer {
 				}
 			}
 
-			for(MethodNode mn : cn.methods) {
+			for(MethodNode mn : (List<MethodNode>)cn.methods) {
 
 				int access = mn.access;
 				for(String owner = cn.name; owner != null;) {

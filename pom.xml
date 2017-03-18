@@ -51,6 +51,7 @@
 					</execution>
 				</executions>
 				<configuration>
+					<createDependencyReducedPom>false</createDependencyReducedPom>
 					<artifactSet>
 						<includes>
 							<include>org.ow2.asm:asm-all</include>
