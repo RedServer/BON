@@ -1,8 +1,15 @@
 package immibis.bon;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Mapping {
+
+	// TODO TheAndrey start: Добавленные поля
+	private static final Pattern PATTERN_CLASS_PART = Pattern.compile("^[a-z0-9_\\/]+\\$([0-9]+)$", Pattern.CASE_INSENSITIVE);
+	private static final Pattern PATTERN_SUBCLASS = Pattern.compile("^[a-z0-9_\\/]+(\\$[a-z0-9]+)+$", Pattern.CASE_INSENSITIVE);
+	// TODO TheAndrey end
 
 	private final Map<String, String> classes = new HashMap<>();
 	private final Map<String, String> methods = new HashMap<>();
@@ -73,6 +80,42 @@ public class Mapping {
 		if(!in.contains("/")) {
 			return defaultPackage + in;
 		}
+
+		// TODO TheAndrey start: Ремаппинг подклассов
+		Matcher partMatcher = PATTERN_CLASS_PART.matcher(in);
+		if(partMatcher.matches()) {
+			String parent = getParentClassName(in);
+			int part = Integer.parseInt(partMatcher.group(1));
+
+			String mapped = classes.get(parent);
+			if(mapped != null) {
+				mapped += "$" + part;
+				if(!mapped.equals(in)) {
+					setClass(in, mapped); // сохраняем в маппинги для следующих обращений
+					System.out.println("Remapped part: " + in + " -> " + mapped);
+					return mapped;
+				}
+			}
+		}
+
+		Matcher subClassMatcher = PATTERN_SUBCLASS.matcher(in);
+		if(subClassMatcher.matches()) {
+			String parent = in;
+			while(parent != null) {
+				parent = getParentClassName(parent);
+				String mapped = classes.get(parent);
+				if(mapped != null) {
+					mapped += in.substring(parent.length());
+					if(!mapped.equals(in)) {
+						setClass(in, mapped); // сохраняем в маппинги для следующих обращений
+						System.out.println("Remapped part: " + in + " -> " + mapped);
+						return mapped;
+					}
+				}
+			}
+		}
+		// TODO TheAndrey end
+
 		return in;
 	}
 
@@ -170,5 +213,29 @@ public class Mapping {
 		}
 		return parseTypes(in, false, false);
 	}
+
+	// TODO TheAndrey start: Добавленные методы
+	/**
+	 * Получить имя родительского класса, если это подкласс или часть. Каждый вызов позволяет подняться на ступень выше.
+	 * @param name Имя класса, включая пакет
+	 * @return Имя родительского класса. null если это класс верхнего уровня.
+	 */
+	public static String getParentClassName(String name) {
+		// Отделяем пакет от имени класса
+		int pointPos = name.lastIndexOf("/");
+		String packageName = null;
+		String className = name;
+		if(pointPos >= 0) {
+			packageName = name.substring(0, pointPos);
+			className = name.substring(pointPos + 1);
+		}
+
+		int sepPos = className.lastIndexOf("$");
+		if(sepPos < 0) return null; // это класс верхнего уровня
+		String parentName = className.substring(0, sepPos);
+		if(packageName != null) parentName = packageName + "/" + parentName;
+		return parentName;
+	}
+	// TODO TheAndrey end
 
 }
