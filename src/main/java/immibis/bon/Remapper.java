@@ -20,6 +20,7 @@ import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.FrameNode;
 import org.objectweb.asm.tree.InnerClassNode;
+import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.LocalVariableNode;
 import org.objectweb.asm.tree.MethodInsnNode;
@@ -270,6 +271,12 @@ public class Remapper {
 							case AbstractInsnNode.MULTIANEWARRAY_INSN: { // Многомерный массив
 								MultiANewArrayInsnNode arrayinsn = (MultiANewArrayInsnNode)ain;
 								arrayinsn.desc = m.getClass(arrayinsn.desc);
+								break;
+							}
+
+							case AbstractInsnNode.INVOKE_DYNAMIC_INSN: { // Вызов лямбды
+								InvokeDynamicInsnNode invokeinsn = (InvokeDynamicInsnNode)ain;
+								invokeinsn.desc = m.mapMethodDescriptor(invokeinsn.desc);
 								break;
 							}
 							// TODO TheAndrey end
