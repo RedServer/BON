@@ -92,7 +92,7 @@ public class Mapping {
 				mapped += "$" + part;
 				if(!mapped.equals(in)) {
 					setClass(in, mapped); // сохраняем в маппинги для следующих обращений
-					System.out.println("Remapped part: " + in + " -> " + mapped);
+//					System.out.println("Remapped part: " + in + " -> " + mapped);
 					return mapped;
 				}
 			}
@@ -108,7 +108,7 @@ public class Mapping {
 					mapped += in.substring(parent.length());
 					if(!mapped.equals(in)) {
 						setClass(in, mapped); // сохраняем в маппинги для следующих обращений
-						System.out.println("Remapped part: " + in + " -> " + mapped);
+//						System.out.println("Remapped part: " + in + " -> " + mapped);
 						return mapped;
 					}
 				}
