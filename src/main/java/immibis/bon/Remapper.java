@@ -204,68 +204,77 @@ public class Remapper {
 				if(mn.instructions != null) {
 					for(AbstractInsnNode ain = mn.instructions.getFirst(); ain != null; ain = ain.getNext()) {
 
-						if(ain instanceof FieldInsnNode) {
-							FieldInsnNode fin = (FieldInsnNode)ain;
+						switch(ain.getType()) { // TODO TheAndrey: Замена на switch
+							case AbstractInsnNode.FIELD_INSN: {
+								FieldInsnNode fin = (FieldInsnNode)ain;
 
-							String realOwner = resolveField(refClasses, fin.owner, fin.name, fin.desc, m);
+								String realOwner = resolveField(refClasses, fin.owner, fin.name, fin.desc, m);
+								if(realOwner == null) realOwner = fin.owner;
 
-							if(realOwner == null) {
-								realOwner = fin.owner;
+								fin.name = m.getField(realOwner, fin.name, fin.desc);
+								fin.desc = m.mapTypeDescriptor(fin.desc);
+								fin.owner = m.getClass(realOwner);
+								break;
 							}
 
-							fin.name = m.getField(realOwner, fin.name, fin.desc);
-							fin.desc = m.mapTypeDescriptor(fin.desc);
-							fin.owner = m.getClass(realOwner);
+							case AbstractInsnNode.FRAME: {
+								FrameNode fn = (FrameNode)ain;
 
-						} else if(ain instanceof FrameNode) {
-							FrameNode fn = (FrameNode)ain;
-
-							if(fn.local != null) {
-								for(int k = 0; k < fn.local.size(); k++) {
-									if(fn.local.get(k) instanceof String) {
-										fn.local.set(k, m.getClass((String)fn.local.get(k)));
+								if(fn.local != null) {
+									for(int k = 0; k < fn.local.size(); k++) {
+										if(fn.local.get(k) instanceof String) {
+											fn.local.set(k, m.getClass((String)fn.local.get(k)));
+										}
 									}
 								}
-							}
 
-							if(fn.stack != null) {
-								for(int k = 0; k < fn.stack.size(); k++) {
-									if(fn.stack.get(k) instanceof String) {
-										fn.stack.set(k, m.getClass((String)fn.stack.get(k)));
+								if(fn.stack != null) {
+									for(int k = 0; k < fn.stack.size(); k++) {
+										if(fn.stack.get(k) instanceof String) {
+											fn.stack.set(k, m.getClass((String)fn.stack.get(k)));
+										}
 									}
 								}
+								break;
 							}
 
-						} else if(ain instanceof MethodInsnNode) {
-							MethodInsnNode min = (MethodInsnNode)ain;
+							case AbstractInsnNode.METHOD_INSN: {
+								MethodInsnNode min = (MethodInsnNode)ain;
 
-							String[] realOwnerAndDesc = resolveMethod(refClasses, min.owner, min.name, min.desc, m);
+								String[] realOwnerAndDesc = resolveMethod(refClasses, min.owner, min.name, min.desc, m);
 
-							String realOwner = realOwnerAndDesc == null ? min.owner : realOwnerAndDesc[0];
-							String realDesc = realOwnerAndDesc == null ? min.desc : realOwnerAndDesc[1];
+								String realOwner = realOwnerAndDesc == null ? min.owner : realOwnerAndDesc[0];
+								String realDesc = realOwnerAndDesc == null ? min.desc : realOwnerAndDesc[1];
 
-							min.name = m.getMethod(realOwner, min.name, realDesc);
-							min.owner = m.getClass(min.owner); // note: not realOwner which could be an interface
-							min.desc = m.mapMethodDescriptor(realDesc);
-
-						} else if(ain instanceof LdcInsnNode) {
-							LdcInsnNode lin = (LdcInsnNode)ain;
-
-							if(lin.cst instanceof Type) {
-								lin.cst = Type.getType(m.mapTypeDescriptor(((Type)lin.cst).getDescriptor()));
+								min.name = m.getMethod(realOwner, min.name, realDesc);
+								min.owner = m.getClass(min.owner); // note: not realOwner which could be an interface
+								min.desc = m.mapMethodDescriptor(realDesc);
+								break;
 							}
 
-						} else if(ain instanceof TypeInsnNode) {
-							TypeInsnNode tin = (TypeInsnNode)ain;
+							case AbstractInsnNode.LDC_INSN: {
+								LdcInsnNode lin = (LdcInsnNode)ain;
+								if(lin.cst instanceof Type) {
+									lin.cst = Type.getType(m.mapTypeDescriptor(((Type)lin.cst).getDescriptor()));
+								}
+								break;
+							}
 
-							tin.desc = m.getClass(tin.desc);
+							case AbstractInsnNode.TYPE_INSN: {
+								TypeInsnNode tin = (TypeInsnNode)ain;
+								tin.desc = m.getClass(tin.desc);
+								break;
+							}
 
 							// TODO TheAndrey start
-						} else if(ain instanceof MultiANewArrayInsnNode) { // Многомерный массив
-							MultiANewArrayInsnNode arrayinsn = (MultiANewArrayInsnNode)ain;
-							arrayinsn.desc = m.getClass(arrayinsn.desc);
+							case AbstractInsnNode.MULTIANEWARRAY_INSN: { // Многомерный массив
+								MultiANewArrayInsnNode arrayinsn = (MultiANewArrayInsnNode)ain;
+								arrayinsn.desc = m.getClass(arrayinsn.desc);
+								break;
+							}
+							// TODO TheAndrey end
 						}
-						// TODO TheAndrey end
+
 					}
 				}
 
