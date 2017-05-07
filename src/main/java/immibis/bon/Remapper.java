@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.objectweb.asm.Handle;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -277,6 +278,22 @@ public class Remapper {
 							case AbstractInsnNode.INVOKE_DYNAMIC_INSN: { // Вызов лямбды
 								InvokeDynamicInsnNode invokeinsn = (InvokeDynamicInsnNode)ain;
 								invokeinsn.desc = m.mapMethodDescriptor(invokeinsn.desc);
+
+								// Правим типы аргументов
+								for(int i = 0; i < invokeinsn.bsmArgs.length; i++) {
+									Object arg = invokeinsn.bsmArgs[i];
+									if(arg instanceof Type) {
+										arg = Type.getType(m.mapMethodDescriptor(((Type)arg).getDescriptor()));
+									} else if(arg instanceof Handle) {
+										Handle handle = (Handle)arg;
+										String handleOwner = m.getClass(handle.getOwner());
+										String handleDesc = m.mapMethodDescriptor(handle.getDesc());
+										if(!handle.getOwner().equals(handleOwner) || !handle.getDesc().equals(handleDesc)) {
+											arg = new Handle(handle.getTag(), handleOwner, handle.getName(), handleDesc, handle.isInterface());
+										}
+									}
+									invokeinsn.bsmArgs[i] = arg;
+								}
 								break;
 							}
 							// TODO TheAndrey end
