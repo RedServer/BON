@@ -137,8 +137,12 @@ public abstract class CUIBase {
 	protected void run(String[] args) throws Exception {
 		if(args.length == 0) {
 			showUsage();
-		} else if(parseOptions(args) && checkOptions()) {
-			run();
+		} else {
+			if(parseOptions(args) && checkOptions()) {
+				run();
+			} else {
+				System.exit(1);
+			}
 		}
 	}
 

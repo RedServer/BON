@@ -449,6 +449,7 @@ public class GuiMain extends JFrame {
 				MCPRemap.main(args);
 			} catch (Throwable e) {
 				e.printStackTrace();
+				System.exit(1);
 			}
 		} else {
 			try {
