@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+	id 'com.github.johnrengelman.shadow' version '5.2.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Project settings
+archivesBaseName = 'BON'
+group = 'immibis.bon'
+version = '2.0'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+dependencies {
+	compileOnly group: 'org.ow2.asm', name: 'asm-debug-all', version: '5.2'
+	runtimeOnly group: 'org.ow2.asm', name: 'asm-all', version: '5.2'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+jar {
+	classifier = 'build'
+	manifest {
+		attributes 'Main-Class': 'immibis.bon.gui.GuiMain'
+	}
+}
+
+shadowJar {
+	classifier = null
+	relocate 'org.objectweb.asm', 'immibis.bon.org.objectweb.asm'
+}
+
+/* Task dependency */
+tasks.build.dependsOn tasks.shadowJar
