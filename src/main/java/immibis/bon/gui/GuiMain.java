@@ -1,15 +1,5 @@
 package immibis.bon.gui;
 
-import immibis.bon.ClassCollection;
-import immibis.bon.IProgressListener;
-import immibis.bon.NameSet;
-import immibis.bon.Remapper;
-import immibis.bon.cui.MCPRemap;
-import immibis.bon.io.ClassCollectionFactory;
-import immibis.bon.io.JarWriter;
-import immibis.bon.io.MappingFactory;
-import immibis.bon.mcp.MappingLoader_MCP;
-
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -30,34 +20,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.prefs.Preferences;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
+import javax.swing.*;
+import immibis.bon.ClassCollection;
+import immibis.bon.IProgressListener;
+import immibis.bon.NameSet;
+import immibis.bon.Remapper;
+import immibis.bon.cui.MCPRemap;
+import immibis.bon.io.ClassCollectionFactory;
+import immibis.bon.io.JarWriter;
+import immibis.bon.io.MappingFactory;
+import immibis.bon.mcp.MappingLoader_MCP;
 
 public class GuiMain extends JFrame {
 
 	private static final long serialVersionUID = 1;
 
-	// The Java Preferences API is used to store the last directory the user was browsing
-	// for the input/output files (PREFS_KEY_BROWSEDIR)
-	// and the selected MCP directory (PREFS_KEY_MCPDIR).
-	// Prefs are saved when the user clicks "Go" or closes the window.
+	/**
+	 * The Java Preferences API is used to store the last directory the user was browsing
+	 * for the input/output files (PREFS_KEY_BROWSEDIR)
+	 * and the selected MCP directory (PREFS_KEY_MCPDIR).
+	 * Prefs are saved when the user clicks "Go" or closes the window.
+	 */
 	private final Preferences prefs = Preferences.userNodeForPackage(GuiMain.class);
 	private final static String PREFS_KEY_BROWSEDIR = "browseDir";
 	private final static String PREFS_KEY_MCPDIR = "mcpDir";
 
-	private final JComboBox opSelect;
-	private final JComboBox sideSelect;
+	private final JComboBox<Operation> opSelect;
+	private final JComboBox<Side> sideSelect;
 	private final JTextField inputField;
-	private JTextField outputField, mcpField;
+	private final JTextField outputField;
+	private final JTextField mcpField;
 	private final JButton goButton;
 	private final JProgressBar progressBar;
 	private final JLabel progressLabel;
@@ -65,9 +57,9 @@ public class GuiMain extends JFrame {
 	private Thread curTask = null;
 
 	// the last directory the user was browsing, for the input/output files
-	private final Reference<File> browseDir = new Reference<File>();
+	private final Reference<File> browseDir = new Reference<>();
 	// the last directory the user was browsing, for the MCP directory
-	private final Reference<File> mcpBrowseDir = new Reference<File>();
+	private final Reference<File> mcpBrowseDir = new Reference<>();
 
 	private void savePrefs() {
 		prefs.put(PREFS_KEY_BROWSEDIR, browseDir.val.toString());
@@ -104,11 +96,23 @@ public class GuiMain extends JFrame {
 
 		progressBar.setValue(0);
 
+		final File inputFile = new File(inputField.getText());
+
 		if(outputField.getText().equals("")) {
-			outputField.setText(inputField.getText() + op.defaultNameSuffix);
+			// TheAndrey: Better suffix generation
+			File dir = inputFile.getParentFile();
+			String name = inputFile.getName();
+			int dot = name.lastIndexOf(".");
+
+			if(dot > 0) {
+				name = name.substring(0, dot) + "-" + op.defaultNameSuffix + name.substring(dot);
+			} else {
+				name += "." + op.defaultNameSuffix;
+			}
+
+			outputField.setText(dir + File.separator + name);
 		}
 
-		final File inputFile = new File(inputField.getText());
 		final File outputFile = new File(outputField.getText());
 
 		curTask = new Thread() {
@@ -160,7 +164,7 @@ public class GuiMain extends JFrame {
 					String mcVer = MappingLoader_MCP.getMCVer(mcpDir);
 
 					NameSet refNS = new NameSet(NameSet.Type.MCP, side.nsside, mcVer);
-					Map<String, ClassCollection> refCCList = new HashMap<String, ClassCollection>();
+					Map<String, ClassCollection> refCCList = new HashMap<>();
 
 					for(String s : refPathList) {
 						File refPathFile = new File(mcpDir, s);
@@ -176,22 +180,22 @@ public class GuiMain extends JFrame {
 					NameSet.Type inputType;
 
 					switch(op) {
-						case DeobfuscateMod:
+						case DEOBFUSCATE_MOD:
 							inputType = NameSet.Type.OBF;
 							remapTo = new NameSet.Type[]{NameSet.Type.SRG, NameSet.Type.MCP};
 							break;
 
-						case ReobfuscateMod:
+						case REOBFUSCATE_MOD:
 							inputType = NameSet.Type.MCP;
 							remapTo = new NameSet.Type[]{NameSet.Type.OBF};
 							break;
 
-						case SRGifyMod:
+						case SRGIFY_MOD:
 							inputType = NameSet.Type.OBF;
 							remapTo = new NameSet.Type[]{NameSet.Type.SRG};
 							break;
 
-						case ReobfuscateModSRG:
+						case REOBFUSCATE_MOD_SRG:
 							inputType = NameSet.Type.MCP;
 							remapTo = new NameSet.Type[]{NameSet.Type.SRG};
 							break;
@@ -225,7 +229,7 @@ public class GuiMain extends JFrame {
 					for(NameSet.Type outputType : remapTo) {
 						NameSet outputNS = new NameSet(outputType, side.nsside, mcVer);
 
-						List<ClassCollection> remappedRefs = new ArrayList<ClassCollection>();
+						List<ClassCollection> remappedRefs = new ArrayList<>();
 						for(Map.Entry<String, ClassCollection> e : refCCList.entrySet()) {
 
 							if(inputCC.getNameSet().equals(e.getValue().getNameSet())) {
@@ -234,7 +238,7 @@ public class GuiMain extends JFrame {
 
 							} else {
 								progress.start(0, "Remapping " + e.getKey() + " to " + outputType + " names");
-								remappedRefs.add(Remapper.remap(e.getValue(), inputCC.getNameSet(), Collections.<ClassCollection>emptyList(), progress));
+								remappedRefs.add(Remapper.remap(e.getValue(), inputCC.getNameSet(), Collections.emptyList(), progress));
 							}
 						}
 
@@ -325,9 +329,9 @@ public class GuiMain extends JFrame {
 	private static String getStackTraceMessage(Throwable e) {
 		String s = "An error has occurred - give immibis this stack trace (which has been copied to the clipboard)\n";
 
-		s += "\n" + getPrintableStackTrace(e, Collections.<StackTraceElement>emptySet());
+		s += "\n" + getPrintableStackTrace(e, Collections.emptySet());
 		while(e.getCause() != null) {
-			Set<StackTraceElement> stopAt = new HashSet<StackTraceElement>(Arrays.asList(e.getStackTrace()));
+			Set<StackTraceElement> stopAt = new HashSet<>(Arrays.asList(e.getStackTrace()));
 			e = e.getCause();
 			s += "\nCaused by: " + getPrintableStackTrace(e, stopAt);
 		}
@@ -364,8 +368,8 @@ public class GuiMain extends JFrame {
 		outputField = new JTextField();
 		mcpField = new JTextField();
 
-		sideSelect = new JComboBox(Side.values());
-		opSelect = new JComboBox(Operation.values());
+		sideSelect = new JComboBox<>(Side.values());
+		opSelect = new JComboBox<>(Operation.values());
 
 		progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 100);
 		progressLabel = new JLabel(" ", SwingConstants.LEFT);
