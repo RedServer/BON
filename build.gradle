@@ -10,7 +10,7 @@ repositories {
 // Project settings
 archivesBaseName = 'BON'
 group = 'immibis.bon'
-version = '2.0'
+version = '2.1'
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'

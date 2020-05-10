@@ -1,8 +1,10 @@
 package immibis.bon;
 
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import immibis.bon.io.MappingFactory;
 import immibis.bon.io.MappingFactory.MappingUnavailableException;
@@ -17,6 +19,7 @@ import org.objectweb.asm.tree.*;
 public class Remapper {
 
 	private final HashMap<String, ClassNode> refClasses = new HashMap<>();
+	private final HashMap<String, Set<String>> inheritanceMap = new HashMap<>(); // parent class => inheritor list
 	private final Mapping mapping;
 
 	public Remapper(Mapping mapping) {
@@ -66,6 +69,7 @@ public class Remapper {
 		}
 		String[] r = null;
 
+		/* Process interface class */
 		if((cn.access & Opcodes.ACC_INTERFACE) != 0) {
 
 			// interface method resolution; http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-5.html#jvms-5.4.3.4
@@ -135,9 +139,50 @@ public class Remapper {
 				owner = cn.superName;
 			}
 
+			/* TheAndrey: Find method owner in interfaces of inherited classes */
+			HashSet<ClassNode> possibleInterfaces = new LinkedHashSet<>();
+			findInheritedInterfaces(originalOwner, possibleInterfaces);
+
+			for(ClassNode inode : possibleInterfaces) {
+				for(MethodNode method : inode.methods) {
+					if(method.name.equals(name) && method.desc.equals(desc)) {
+						r = new String[]{inode.name, desc, name};
+						break;
+					}
+				}
+			}
 		}
 
 		return r;
+	}
+
+	/**
+	 * Recursive scan of inherited interfaces
+	 */
+	private void findInheritedInterfaces(String owner, Set<ClassNode> interfaces) {
+		/* Get all inherits of class */
+		Set<String> inherited = inheritanceMap.get(owner);
+		if(inherited == null || inherited.isEmpty()) return; // stop
+
+		for(String name : inherited) {
+			/* Get interfaces */
+			ClassNode node = refClasses.get(name);
+			if(node != null) addInterfacesRecursive(node, interfaces);
+
+			findInheritedInterfaces(name, interfaces);
+		}
+	}
+
+	private void addInterfacesRecursive(ClassNode node, Set<ClassNode> interfaces) {
+		if(node.interfaces == null || node.interfaces.isEmpty()) return;
+
+		for(String name : node.interfaces) {
+			ClassNode inode = refClasses.get(name);
+			if(inode != null) {
+				interfaces.add(inode);
+				if(Modifier.isInterface(inode.access)) addInterfacesRecursive(inode, interfaces);
+			}
+		}
 	}
 
 	public ClassCollection remap(ClassCollection cc, Collection<ClassCollection> refs, IProgressListener progress) {
@@ -152,6 +197,7 @@ public class Remapper {
 		}
 
 		refClasses.clear();
+		inheritanceMap.clear();
 
 		for(ClassCollection refcc : refs) {
 			for(ClassNode cn : refcc.getAllClasses()) {
@@ -160,6 +206,27 @@ public class Remapper {
 		}
 		for(ClassNode cn : cc.getAllClasses()) {
 			refClasses.put(cn.name, cn);
+		}
+
+		// TheAndrey: Generate inheritance map
+		for(ClassNode node : refClasses.values()) {
+			if(Modifier.isInterface(node.access)) { // Interface
+
+				if(node.interfaces != null && !node.interfaces.isEmpty()) {
+					for(String parent : node.interfaces) {
+						if(parent.startsWith("java/")) continue; // Not needed for remap
+
+						Set<String> list = inheritanceMap.computeIfAbsent(parent, k -> new LinkedHashSet<>());
+						list.add(node.name);
+					}
+				}
+
+			} else if(!node.superName.equals("java/lang/Object")) { // Normal class
+
+				Set<String> list = inheritanceMap.computeIfAbsent(node.superName, k -> new LinkedHashSet<>());
+				list.add(node.name);
+
+			}
 		}
 
 		cc = cc.cloneWithNameSet(mapping.toNS);
