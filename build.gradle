@@ -4,7 +4,7 @@ plugins {
 }
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 }
 
 // Project settings
@@ -12,8 +12,8 @@ archivesBaseName = 'BON'
 group = 'immibis.bon'
 version = '2.1'
 
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
 	compileOnly group: 'org.ow2.asm', name: 'asm-debug-all', version: '5.2'
@@ -21,18 +21,18 @@ dependencies {
 }
 
 tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
+	options.encoding = 'UTF-8'
 }
 
 jar {
-	classifier = 'build'
+	enabled = false
 	manifest {
 		attributes 'Main-Class': 'immibis.bon.gui.GuiMain'
 	}
 }
 
 shadowJar {
-	classifier = null
+	archiveClassifier.set('')
 	relocate 'org.objectweb.asm', 'immibis.bon.org.objectweb.asm'
 }
 
