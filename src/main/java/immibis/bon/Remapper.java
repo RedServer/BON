@@ -330,22 +330,35 @@ public class Remapper {
 
 							case AbstractInsnNode.INVOKE_DYNAMIC_INSN: { // Вызов лямбды
 								InvokeDynamicInsnNode invokeinsn = (InvokeDynamicInsnNode)ain;
+								Type returnType = Type.getReturnType(invokeinsn.desc);
+								Type internalDesc = null;
+
 								invokeinsn.desc = mapping.mapMethodDescriptor(invokeinsn.desc);
 
 								// Правим типы аргументов
 								for(int i = 0; i < invokeinsn.bsmArgs.length; i++) {
 									Object arg = invokeinsn.bsmArgs[i];
+
 									if(arg instanceof Type) {
+										if(internalDesc == null) internalDesc = (Type)arg;
 										arg = Type.getType(mapping.mapMethodDescriptor(((Type)arg).getDescriptor()));
 									} else if(arg instanceof Handle) {
 										Handle handle = (Handle)arg;
+										boolean isField = isFieldHandle(handle);
 										String handleOwner = mapping.getClass(handle.getOwner());
-										String handleDesc = mapping.mapMethodDescriptor(handle.getDesc());
-										if(!handle.getOwner().equals(handleOwner) || !handle.getDesc().equals(handleDesc)) {
-											arg = new Handle(handle.getTag(), handleOwner, handle.getName(), handleDesc, handle.isInterface());
+										String handleName = isField ? mapping.getField(handle.getOwner(), handle.getName(), handle.getDesc()) : mapping.getMethod(handle.getOwner(), handle.getName(), handle.getDesc());
+										String handleDesc = isField ? mapping.mapTypeDescriptor(handle.getDesc()) : mapping.mapMethodDescriptor(handle.getDesc());
+										if(!handle.getOwner().equals(handleOwner) || !handle.getName().equals(handleName) || !handle.getDesc().equals(handleDesc)) {
+											arg = new Handle(handle.getTag(), handleOwner, handleName, handleDesc, handle.isInterface());
 										}
 									}
+
 									invokeinsn.bsmArgs[i] = arg;
+								}
+
+								// Переименование BootstrapMethod, после того как определили его desc из параметров
+								if(internalDesc != null) {
+									invokeinsn.name = mapping.getMethod(returnType.getInternalName(), invokeinsn.name, internalDesc.toString());
 								}
 								break;
 							}
@@ -457,4 +470,7 @@ public class Remapper {
 		return instance.remap(classes, refs, progress);
 	}
 
+	private static boolean isFieldHandle(Handle handle) {
+		return handle.getTag() == Opcodes.H_GETFIELD || handle.getTag() == Opcodes.H_GETSTATIC || handle.getTag() == Opcodes.H_PUTFIELD || handle.getTag() == Opcodes.H_PUTSTATIC;
+	}
 }
