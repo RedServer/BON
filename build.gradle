@@ -1,5 +1,6 @@
 plugins {
-    id 'java'
+	id 'java'
+	id 'maven-publish'
 	id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
@@ -7,13 +8,7 @@ repositories {
 	mavenCentral()
 }
 
-// Project settings
-archivesBaseName = 'BON'
-group = 'immibis.bon'
-version = '2.2'
-
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
 	compileOnly group: 'org.ow2.asm', name: 'asm-debug-all', version: '5.2'
@@ -24,17 +19,39 @@ tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
 
+tasks.withType(Javadoc) {
+	options.encoding = 'UTF-8'
+}
+
 jar {
-	enabled = false
 	manifest {
 		attributes 'Main-Class': 'immibis.bon.gui.GuiMain'
 	}
 }
 
 shadowJar {
-	archiveClassifier.set('')
 	relocate 'org.objectweb.asm', 'immibis.bon.org.objectweb.asm'
 }
 
+task sourcesJar(type: Jar) {
+	archiveClassifier.set('sources')
+	from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar) {
+	archiveClassifier.set('javadoc')
+	from javadoc
+}
+
 /* Task dependency */
-tasks.build.dependsOn tasks.shadowJar
+tasks.assemble.finalizedBy tasks.shadowJar
+
+publishing {
+	publications {
+		maven(MavenPublication) {
+			from components.java
+			artifact sourcesJar
+			artifact javadocJar
+		}
+	}
+}
