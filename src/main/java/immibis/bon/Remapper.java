@@ -268,7 +268,7 @@ public class Remapper {
 
 								fin.name = mapping.getField(realOwner, fin.name, fin.desc);
 								fin.desc = mapping.mapTypeDescriptor(fin.desc);
-								fin.owner = mapping.getClass(realOwner);
+								fin.owner = mapping.getClass(fin.owner);
 								break;
 							}
 
